@@ -1,16 +1,15 @@
-FROM debian:stretch
-
-# add unstable repositoty to install clang-format-7.0
-# NOTE: the content of unstable repo will be changed
-RUN echo -n 'deb http://ftp.debian.org/debian unstable main contrib non-free' >> /etc/apt/sources.list
+FROM debian:buster
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
    git curl cmake bc automake libtool build-essential pkg-config make debian-archive-keyring \
-   ca-certificates devscripts python unzip libllvm3.9 llvm-3.9-dev opencl-c-headers \
-   g++-6 clang-3.9 ocl-icd-opencl-dev ocl-icd-dev clang-format-7 diffutils \
+   ca-certificates devscripts python unzip libllvm7 llvm-7-dev opencl-c-headers \
+   g++-8 clang-7 ocl-icd-opencl-dev ocl-icd-dev clang-format-7 diffutils spirv-tools \
    wget \
  && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
-# add clang-format
-RUN update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-7 11
+# Build and install Khronos LLVM-SPIRV-Translator
+RUN git clone https://github.com/KhronosGroup/SPIRV-LLVM-Translator.git /opt/SPIRV-LLVM-Translator \
+ && cd /opt/SPIRV-LLVM-Translator/ && mkdir build && cd build && git checkout v7.0.1-1 \
+ && cmake .. && make llvm-spirv -j`nproc` \
+ && rm -rf ../.git/
